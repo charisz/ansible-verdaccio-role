@@ -18,10 +18,3 @@ verdaccio_packages:
     proxy: 'npmjs'
 
 verdaccio_r29: "{{ groups['verdaccio'] }}"
-
-#  - internal.verdaccio2.cloud.rf29.net
-#  - internal.verdaccio1.cloud.rf29.net
-#  - internal.elastic-mi.cloud.rf29.net
-#  - master04.dal5.rf29.net
-#  - proxy.nyc.rf29.net
-#  - build01.sea01.rf29.net
