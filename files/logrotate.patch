@@ -1,0 +1,148 @@
+--- a/src/api/web/middleware.js
++++ b/src/api/web/middleware.js
+@@ -171,7 +171,7 @@ module.exports.final = function(body, req, res, next) {
+ 
+ module.exports.log = function(req, res, next) {
+   // logger
+-  req.log = Logger.logger.child({sub: 'in'});
++  req.log = Logger.logger;
+ 
+   let _auth = req.headers.authorization;
+   if (_.isNil(_auth) === false) {
+diff --git a/src/lib/auth.js b/src/lib/auth.js
+index 921a388c..88b3cee0 100644
+--- a/src/lib/auth.js
++++ b/src/lib/auth.js
+@@ -19,7 +19,7 @@ class Auth {
+    */
+   constructor(config) {
+     this.config = config;
+-    this.logger = Logger.logger.child({sub: 'auth'});
++    this.logger = Logger.logger;
+     this.secret = config.secret;
+ 
+     const plugin_params = {
+diff --git a/src/lib/logger.js b/src/lib/logger.js
+index 5b2b38f9..3cf07ec2 100644
+--- a/src/lib/logger.js
++++ b/src/lib/logger.js
+@@ -29,17 +29,22 @@ function getlvl(x) {
+  * @param {*} logs list of log configuration
+  */
+ function setup(logs) {
++	let files = false;
++
+ 	let streams = [];
+ 	if (logs == null) {
+ 		logs = [{type: 'stdout', format: 'pretty', level: 'http'}];
+ 	}
+ 
+ 	logs.forEach(function(target) {
+-		// create a stream for each log configuration
+-		const stream = new Stream();
+-		stream.writable = true;
++
++		if (target.level === undefined || target.level === 'http') {
++			target.level = 35;
++		}
+ 
+ 		if (target.type === 'stdout' || target.type === 'stderr') {
++			const stream = new Stream();
++			stream.writable = true;
+ 			// destination stream
+ 			const dest = target.type === 'stdout' ? process.stdout : process.stderr;
+ 
+@@ -58,31 +62,25 @@ function setup(logs) {
+ 					dest.write(JSON.stringify(obj, Logger.safeCycles()) + '\n');
+ 				};
+ 			}
++			streams.push({
++				type: 'raw',
++				level: target.level,
++				stream: stream,
++			});
+ 		} else if (target.type === 'file') {
+-			const dest = require('fs').createWriteStream(target.path, {flags: 'a', encoding: 'utf8'});
+-			dest.on('error', function(err) {
+-				Logger.emit('error', err);
++			files = true;
++			streams.push({
++				type: 'file',
++				level: target.level,
++				path: target.path,
+ 			});
+-			stream.write = function(obj) {
+-				if (target.format === 'pretty') {
+-					dest.write(print(obj.level, obj.msg, obj, false) + '\n');
+-				} else {
+-					dest.write(JSON.stringify(obj, Logger.safeCycles()) + '\n');
+-				}
+-			};
+ 		} else {
+ 			throw Error('wrong target type for a log');
+ 		}
+ 
+-		if (target.level === 'http') target.level = 35;
+-		streams.push({
+-			type: 'raw',
+-			level: target.level || 35,
+-			stream: stream,
+-		});
+ 	});
+ 
+-	// buyan default configuration
++	// bunyan default configuration
+ 	const logger = new Logger({
+ 		name: pkgJSON.name,
+ 		streams: streams,
+@@ -93,11 +91,13 @@ function setup(logs) {
+ 		},
+ 	});
+ 
+-       process.on('SIGUSR2', function() {
+-               Logger.reopenFileStreams();
+-       });
+-
+ 	module.exports.logger = logger;
++
++	if (files) {
++		process.on('SIGUSR2', function() {
++			logger.reopenFileStreams();
++		});
++	}
+ }
+ 
+ // adopted from socket.io
+--- a/src/lib/storage.js
++++ b/src/lib/storage.js
+@@ -40,7 +40,7 @@ class Storage {
+     this.localStorage.localList.data.secret = this.config.checkSecretKey(this.localStorage.localList.data.secret);
+     this.localStorage.localList.sync();
+     // an instance for local storage
+-    this.logger = Logger.logger.child();
++    this.logger = Logger.logger;
+   }
+ 
+   /**
+--- a/src/lib/storage/local/local-storage.js
++++ b/src/lib/storage/local/local-storage.js
+@@ -49,7 +49,7 @@ class LocalStorage {
+     this.config = config;
+     this.utils = utils;
+     this.localList = new LocalData(this._buildStoragePath(this.config));
+-    this.logger = logger.child({sub: 'fs'});
++    this.logger = logger;
+   }
+ 
+   /**
+--- a/src/lib/storage/up-storage.js
++++ b/src/lib/storage/up-storage.js
+@@ -46,7 +46,7 @@ class ProxyStorage {
+     this.failed_requests = 0;
+     this.userAgent = mainConfig.user_agent;
+     this.ca = config.ca;
+-    this.logger = Logger.logger.child({sub: 'out'});
++    this.logger = Logger.logger;
+     this.server_id = mainConfig.server_id;
+ 
+     this.url = URL.parse(this.config.url);

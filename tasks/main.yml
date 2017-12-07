@@ -1,0 +1,88 @@
+---
+
+- name: Install npm
+  apt:
+    pkg: npm
+    state: latest
+    update_cache: true
+    install_recommends: false
+
+- name: Install verdaccio
+  npm:
+    name: verdaccio
+    global: true
+    version: "{{ verdaccio_version }}"
+
+- name: Add log-rotation patch
+  patch:
+    src: logrotate.patch
+    basedir: /usr/lib/node_modules/verdaccio
+    strip: 1
+  ignore_errors: |
+    {{ ansible_check_mode }}
+
+- name: Create verdaccio group
+  group:
+    name: "{{ verdaccio_user }}"
+
+- name: Create verdaccio user
+  user:
+    name: "{{ verdaccio_user }}"
+    group: "{{ verdaccio_user }}"
+    system: yes
+
+- name: Create data directory
+  file:
+    path: "{{ verdaccio_storage }}"
+    state: directory
+    owner: "{{ verdaccio_user }}"
+    group: "{{ verdaccio_user }}"
+
+- name: Ensure, log-file exists and is aproperly owned
+  copy:
+    dest: "{{ verdaccio_log_file }}"
+    owner: "{{ verdaccio_user }}"
+    group: "{{ verdaccio_user }}"
+    mode: 0644
+    force: false
+    content: ''
+  when: verdaccio_log_file is defined
+
+- name: Create config directory(ies)
+  file:
+    path: '/{{ item }}'
+    state: directory
+    mode: 0755
+    group: "{{ verdaccio_user }}"
+  with_lines: |
+    cd {{ role_path + '/templates' | quote }}
+    find . -mindepth 1 -type d
+  ignore_errors: |
+    {{ ansible_check_mode }}
+
+- name: Process configuration template(s)
+  template:
+    src: "{{ item }}"
+    dest: "/{{ item | replace('.j2', '') }}"
+    mode: 0644
+    group: "{{ verdaccio_user }}"
+  with_lines: |
+    cd {{ role_path + '/templates' | quote }}
+    find * -type f -name '*.j2'
+  notify: restart verdaccio
+
+- name: Copy configuration file(s)
+  copy:
+    dest: '/{{ item }}'
+    src: '{{ item }}'
+    mode: 0640
+    group: "{{ verdaccio_user }}"
+  with_lines: |
+    cd {{ role_path + '/files' | quote }}
+    find etc -type f
+  notify: restart verdaccio
+
+- name: Start Verdaccio
+  service:
+    name: verdaccio
+    state: started

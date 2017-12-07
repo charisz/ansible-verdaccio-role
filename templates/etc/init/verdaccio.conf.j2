@@ -1,0 +1,10 @@
+description "Verdaccio NPM registry"
+
+start on runlevel [2345]
+stop on shutdown
+respawn
+setuid {{ verdaccio_user }}
+
+script
+	exec verdaccio -c /etc/verdaccio/config.yaml
+end script

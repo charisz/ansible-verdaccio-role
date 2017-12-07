@@ -1,0 +1,4 @@
+- name: restart verdaccio
+  service:
+    name: verdaccio
+    state: restarted

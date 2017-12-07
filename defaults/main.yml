@@ -1,0 +1,27 @@
+verdaccio_user: verdaccio
+verdaccio_group: verdaccio
+verdaccio_storage: /srv/verdaccio
+verdaccio_version: latest
+# verdaccio_url_prefix: /npms/
+verdaccio_host: '0.0.0.0'
+verdaccio_port: 4873
+verdaccio_log_file: '/var/log/verdaccio.log'
+verdaccio_uplinks:
+  - name: 'npmjs'
+    url: 'https://registry.npmjs.org/'
+verdaccio_packages:
+  - name: '@*/*'
+    access: '$all'
+    proxy: 'npmjs'
+  - name: '*'
+    access: '$all'
+    proxy: 'npmjs'
+
+verdaccio_r29: "{{ groups['verdaccio'] }}"
+
+#  - internal.verdaccio2.cloud.rf29.net
+#  - internal.verdaccio1.cloud.rf29.net
+#  - internal.elastic-mi.cloud.rf29.net
+#  - master04.dal5.rf29.net
+#  - proxy.nyc.rf29.net
+#  - build01.sea01.rf29.net

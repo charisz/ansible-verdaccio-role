@@ -1,0 +1,15 @@
+{{ ansible_managed | comment }}
+
+{{ verdaccio_log_file }} {
+	create
+	compress
+	compresscmd	/usr/bin/xz
+	compressext	.xz
+	compressoptions	-9
+	daily
+	notifempty
+	rotate	7
+	postrotate
+		exec killall -USR2 verdaccio
+	endscript
+}

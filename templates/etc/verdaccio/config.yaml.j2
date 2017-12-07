@@ -1,0 +1,65 @@
+---
+
+storage: {{ verdaccio_storage }}
+
+auth:
+  htpasswd:
+    file: /etc/verdaccio/users
+
+# a list of other known repositories we can talk to
+uplinks:
+{% for uplink in verdaccio_uplinks %}
+  '{{ uplink.name }}':
+    url: '{{ uplink.url }}'
+    cache: true
+{% endfor %}
+{% for host in verdaccio_r29 if host != inventory_hostname %}
+  {{ host }}:
+    cache: true
+{#%   set ips = lookup('dig', host + '/A', wantlist=True) | default([]) %#}
+{%   set peer = hostvars[host]['verdaccio_alias'] | default(host) %}
+{%   set ips = hostvars[host]['ansible_all_ipv4_addresses'] %}
+{%   if ips | intersect(ansible_all_ipv4_addresses) %}
+# Skipping {{ host }}, because that's me ({{ inventory_hostname }})
+{%    else %}
+    url:
+{%-    if ips | ipaddr('public') %}
+	https://{{ peer }}:{{ verdaccio_port + 1 }}
+{%-    else %}
+	http://{{ peer }}:{{ verdaccio_port }}
+{%-    endif -%}
+{%   endif %}
+
+{% endfor %}
+
+packages:
+  '@r29/*':
+    access: $all
+    publish: $authenticated
+    proxy:
+{% for host in verdaccio_r29 | shuffle(seed=inventory_hostname) if host != inventory_hostname %}
+    - {{ host }}
+{% endfor %}
+{% for pkg in verdaccio_packages %}
+  '{{ pkg.name }}':
+{% if 'access' in pkg %}
+    access: {{ pkg.access }}
+{% endif %}
+{% if 'publish' in pkg %}
+    publish: {{ pkg.publish }}
+{% endif %}
+{% if 'proxy' in pkg %}
+    proxy: {{ pkg.proxy }}
+{% endif %}
+{% endfor %}
+
+# log settings
+logs:
+{% if verdaccio_log_file is defined %}
+  - {type: file, path: '{{ verdaccio_log_file }}', level: debug}
+{% else %}
+  - {type: stdout, format: pretty, level: http}
+{% endif %}
+
+listen:
+  - {{ verdaccio_host }}:{{ verdaccio_port }}
