@@ -1,8 +1,8 @@
 ---
 
-- name: Install npm
+- name: Install node/npm
   apt:
-    pkg: npm
+    pkg: nodejs
     state: latest
     update_cache: true
     install_recommends: false
