@@ -61,5 +61,11 @@ logs:
   - {type: stdout, format: pretty, level: http}
 {% endif %}
 
+https:
+  cert: /etc/verdaccio/npm.rf29.net.pem
+  key: /etc/verdaccio/npm.rf29.net.pem
+  ca: /dev/null
+
 listen:
   - {{ verdaccio_host }}:{{ verdaccio_port }}
+  - https://{{ verdaccio_host }}:{{ verdaccio_port + 1 }}
