@@ -1,12 +1,5 @@
 ---
 
-- name: Install node/npm
-  apt:
-    pkg: nodejs
-    state: latest
-    update_cache: true
-    install_recommends: false
-
 - name: Install verdaccio
   npm:
     name: verdaccio
