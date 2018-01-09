@@ -1,5 +1,6 @@
 - name: restart verdaccio
   debug: msg="Notify service and systemd handlers"
+  changed_when: true
   notify:
     - restart verdaccio service
     - restart verdaccio systemd
