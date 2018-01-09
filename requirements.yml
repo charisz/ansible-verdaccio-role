@@ -3,4 +3,4 @@
 - name: refinery29.node
   scm: git
   src: git@github.com:refinery29/ansible-node-role
-  version: v1.0.0
+  version: v1.0.1
