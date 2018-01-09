@@ -12,7 +12,7 @@ Vagrant.configure(2) do |config|
             machine.vm.box = box
             if index == machines.length - 1 then
                 machine.vm.provision :ansible,
-                    raw_arguments: %w(-vvv --diff),
+                    raw_arguments: %w(-vv --diff),
                     playbook: 'test-playbook.yml',
                     groups: { role_name => machine_names },
                     limit: :all
