@@ -9,7 +9,7 @@ auth:
 # a list of other known repositories we can talk to
 uplinks:
 {% for uplink in verdaccio_uplinks %}
-  '{{ uplink.name }}':
+  {{ uplink.name }}:
     url: '{{ uplink.url }}'
     cache: true
 {% endfor %}
@@ -21,12 +21,12 @@ uplinks:
 {%   set ips = hostvars[host]['ansible_all_ipv4_addresses'] %}
 {%   if ips | intersect(ansible_all_ipv4_addresses) %}
 # Skipping {{ host }}, because that's me ({{ inventory_hostname }})
-{%    else %}
+{%   else %}
     url:
 {%-    if ips | ipaddr('public') %}
-	https://{{ peer }}:{{ verdaccio_port + 1 }}
+      https://{{ peer }}:{{ verdaccio_port + 1 }}
 {%-    else %}
-	http://{{ peer }}:{{ verdaccio_port }}
+      http://{{ peer }}:{{ verdaccio_port }}
 {%-    endif -%}
 {%   endif %}
 
