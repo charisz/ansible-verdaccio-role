@@ -1,9 +1,11 @@
-.PHONY: ci test clean
+.PHONY: ci test clean refresh
 MAKEFLAGS = --keep-going
 
-ci: init
+ci: | refresh test clean
 
-init: | test clean
+refresh:
+	ansible-galaxy install --roles-path .. --role-file requirements.yml
+	vagrant box update
 
 test:
 	vagrant up --provision
