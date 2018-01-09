@@ -1,4 +1,17 @@
 - name: restart verdaccio
+  debug: msg="Notify service and systemd handlers"
+  notify:
+    - restart verdaccio service
+    - restart verdaccio systemd
+
+- name: restart verdaccio service
   service:
     name: verdaccio
     state: restarted
+  when: ansible_distribution_release == 'trusty'
+
+- name: restart verdaccio systemd
+  systemd:
+    name: verdaccio.service
+    state: restarted
+  when: ansible_service_mgr == 'systemd'

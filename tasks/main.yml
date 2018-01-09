@@ -47,21 +47,23 @@
     state: directory
     mode: 0755
     group: "{{ verdaccio_user }}"
-  with_lines: |
-    cd {{ role_path + '/templates' | quote }}
-    find . -mindepth 1 -type d
-  ignore_errors: |
-    {{ ansible_check_mode }}
+  with_items:
+    - etc/init
+    - etc/logrotate.d
+    - etc/verdaccio
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Process configuration template(s)
   template:
-    src: "{{ item }}"
-    dest: "/{{ item | replace('.j2', '') }}"
+    src: "{{ item }}.j2"
+    dest: "/{{ item }}"
     mode: 0644
     group: "{{ verdaccio_user }}"
-  with_lines: |
-    cd {{ role_path + '/templates' | quote }}
-    find * -type f -name '*.j2'
+  with_items:
+    - etc/init/verdaccio.conf
+    - etc/systemd/system/verdaccio.service
+    - etc/logrotate.d/verdaccio
+    - etc/verdaccio/config.yaml
   notify: restart verdaccio
 
 - name: Copy configuration file(s)
@@ -70,12 +72,22 @@
     src: '{{ item }}'
     mode: 0640
     group: "{{ verdaccio_user }}"
-  with_lines: |
-    cd {{ role_path + '/files' | quote }}
-    find etc -type f
+  with_items:
+    # TODO letsencrypt instead of static cert
+    - etc/verdaccio/npm.rf29.net.pem
+    - etc/verdaccio/users
   notify: restart verdaccio
 
-- name: Start Verdaccio
+- name: Start Verdaccio service on trusty
   service:
     name: verdaccio
     state: started
+  when: ansible_distribution_release == 'trusty'
+
+- name: Enable and start Verdaccio systemd service
+  when: ansible_service_mgr == 'systemd'
+  systemd:
+    name: verdaccio.service
+    daemon_reload: yes
+    state: started
+    enabled: true

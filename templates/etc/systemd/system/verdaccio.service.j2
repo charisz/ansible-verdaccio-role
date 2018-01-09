@@ -1,0 +1,12 @@
+[Unit]
+Description=verdaccio Service
+
+[Service]
+Type=simple
+User={{ verdaccio_user }}
+WorkingDirectory=/etc/verdaccio
+ExecStart=/usr/bin/env verdaccio -c /etc/verdaccio/config.yaml
+ExecStop=/usr/bin/bash -c "kill $(ps -ef | grep ^verdacc+ | awk {'print $2'})"
+
+[Install]
+WantedBy=multi-user.target
