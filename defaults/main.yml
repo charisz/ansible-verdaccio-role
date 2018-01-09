@@ -18,4 +18,4 @@ verdaccio_packages:
     access: $all
     proxy: npmjs
 
-verdaccio_r29: "{{ groups['verdaccio'] }}"
+verdaccio_hosts: [ "{{ inventory_hostname }}" ]

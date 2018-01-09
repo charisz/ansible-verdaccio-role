@@ -13,7 +13,7 @@ uplinks:
     url: '{{ uplink.url }}'
     cache: true
 {% endfor %}
-{% for host in verdaccio_r29 if host != inventory_hostname %}
+{% for host in verdaccio_hosts if host != inventory_hostname %}
   {{ host }}:
     cache: true
 {#%   set ips = lookup('dig', host + '/A', wantlist=True) | default([]) %#}
@@ -37,8 +37,8 @@ packages:
     access: $all
     publish: $authenticated
     proxy:
-{% for host in verdaccio_r29 | shuffle(seed=inventory_hostname) if host != inventory_hostname %}
-    - {{ host }}
+{% for host in verdaccio_hosts | shuffle(seed=inventory_hostname) if host != inventory_hostname %}
+      - {{ host }}
 {% endfor %}
 {% for pkg in verdaccio_packages %}
   '{{ pkg.name }}':
