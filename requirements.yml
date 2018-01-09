@@ -1,0 +1,6 @@
+---
+# This file defines roles to be retrieved for use in our playbooks with the `ansible-galaxy` command.
+- name: refinery29.node
+  scm: git
+  src: git@github.com:refinery29/ansible-node-role
+  version: v1.0.0
